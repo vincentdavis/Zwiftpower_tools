@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+profile_img
+Team_results.ipynb
+.DS_Store
