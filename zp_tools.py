@@ -28,8 +28,7 @@ def get_team_data(team_id, headers=None, s=requests.Session()):
 
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_riders&id={team_id}'
-    zp_api = s.get(url, headers=headers)
-    return pd.DataFrame(s.get(zp_api, headers=headers).json()['data'])
+    return pd.DataFrame(s.get(url, headers=headers).json()['data'])
 
 
 def get_user_page(zp_id, headers=None, s=requests.Session()):
