@@ -17,7 +17,7 @@ def get_team_page(team_id, headers=None, s=requests.Session()):
     cryo-gen team_id = 2740
     '''
     url = f'https://www.zwiftpower.com/team.php?id={team_id}'
-    return BeautifulSoup(s.get(zpteam_url, headers=headers).content, 'html.parser')
+    return BeautifulSoup(s.get(url, headers=headers).content, 'html.parser')
 
 
 def get_team_data(team_id, header=None, s=requests.Session()):
@@ -26,7 +26,7 @@ def get_team_data(team_id, header=None, s=requests.Session()):
     cryo-gen team_id = 2740
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_riders&id={team_id}'
-    zp_team_api = s.get(zp_api, headers=headers)
+    zp_api = s.get(url, headers=headers)
     return pd.DataFrame(s.get(zp_api, headers=headers).json()['data'])
 
 
