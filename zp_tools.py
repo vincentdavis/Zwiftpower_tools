@@ -9,6 +9,7 @@ from PIL import Image
 from random import randint
 from time import sleep
 
+
 # A set of tools to get data from Zwift power.
 
 def get_team_page(team_id, headers=None, s=requests.Session()):
@@ -24,10 +25,11 @@ def get_team_data(team_id, header=None, s=requests.Session()):
     '''
     Gets team data from API. Returns dataframe
     cryo-gen team_id = 2740
+
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_riders&id={team_id}'
-    zp_api = s.get(url, headers=header)
-    return pd.DataFrame(s.get(zp_api, headers=header).json()['data'])
+    zp_api = s.get(url, header=header)
+    return pd.DataFrame(s.get(zp_api, header=header).json()['data'])
 
 
 def get_user_page(zp_id, header=None, s=requests.Session()):
@@ -36,7 +38,7 @@ def get_user_page(zp_id, header=None, s=requests.Session()):
     zp_id = 593408
     '''
     url = f'https://www.zwiftpower.com/profile.php?z={zp_id}'
-    return BeautifulSoup(s.get(url, headers=header).content, 'html.parser')
+    return BeautifulSoup(s.get(url, header=header).content, 'html.parser')
 
 
 def get_user_data(zp_id, header=None, s=requests.Session()):
@@ -45,7 +47,7 @@ def get_user_data(zp_id, header=None, s=requests.Session()):
     zp_id = 593408
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=profile_results&z={zp_id}'
-    return pd.DataFrame(s.get(url, headers=header).json()['data'])
+    return pd.DataFrame(s.get(url, header=header).json()['data'])
 
 
 def get_user_avitar(zp_id, header=None, s=requests.Session()):
@@ -68,10 +70,10 @@ def get_team_results_data(team_id, header=None, s=requests.Session()):
     https://www.zwiftpower.com/api3.php?do=team_results&id=2740&_=1578282315864
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_results&id={team_id}'
-    return pd.DataFrame(s.get(url, headers=header).json()['data'])
+    return pd.DataFrame(s.get(url, header=header).json()['data'])
 
 
-def get_team_avitars(team_ids):
+def get_team_avitars(team_ids, header=None, s=requests.Session()):
     '''
     team_ids from a ppandas DF, team['zwid']
     '''
