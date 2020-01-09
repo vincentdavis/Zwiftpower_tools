@@ -1,3 +1,13 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import re
+import wget
+import os
+import math
+from PIL import Image
+from random import randint
+from time import sleep
 
 # A set of tools to get data from Zwift power.
 
