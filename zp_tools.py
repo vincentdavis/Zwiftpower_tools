@@ -26,8 +26,8 @@ def get_team_data(team_id, header=None, s=requests.Session()):
     cryo-gen team_id = 2740
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_riders&id={team_id}'
-    zp_api = s.get(url, headers=headers)
-    return pd.DataFrame(s.get(zp_api, headers=headers).json()['data'])
+    zp_api = s.get(url, headers=header)
+    return pd.DataFrame(s.get(zp_api, headers=header).json()['data'])
 
 
 def get_user_page(zp_id, header=None, s=requests.Session()):
@@ -36,7 +36,7 @@ def get_user_page(zp_id, header=None, s=requests.Session()):
     zp_id = 593408
     '''
     url = f'https://www.zwiftpower.com/profile.php?z={zp_id}'
-    return BeautifulSoup(s.get(url, headers=headers).content, 'html.parser')
+    return BeautifulSoup(s.get(url, headers=header).content, 'html.parser')
 
 
 def get_user_data(zp_id, header=None, s=requests.Session()):
@@ -45,7 +45,7 @@ def get_user_data(zp_id, header=None, s=requests.Session()):
     zp_id = 593408
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=profile_results&z={zp_id}'
-    return pd.DataFrame(s.get(url, headers=headers).json()['data'])
+    return pd.DataFrame(s.get(url, headers=header).json()['data'])
 
 
 def get_user_avitar(zp_id, header=None, s=requests.Session()):
@@ -68,7 +68,7 @@ def get_team_results_data(team_id, header=None, s=requests.Session()):
     https://www.zwiftpower.com/api3.php?do=team_results&id=2740&_=1578282315864
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_results&id={team_id}'
-    return pd.DataFrame(s.get(url, headers=headers).json()['data'])
+    return pd.DataFrame(s.get(url, headers=header).json()['data'])
 
 
 def get_team_avitars(team_ids):
@@ -77,7 +77,7 @@ def get_team_avitars(team_ids):
     '''
     # TODO, check if we have it already, have update all/new
     for r in team_ids:
-        get_user_avitar(r, header=headers, s=s)
+        get_user_avitar(r, header=header, s=s)
     sleep(randint(0, 3))  # just to be nice to ZP
 
 
