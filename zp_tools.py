@@ -21,36 +21,36 @@ def get_team_page(team_id, headers=None, s=requests.Session()):
     return BeautifulSoup(s.get(url, headers=headers).content, 'html.parser')
 
 
-def get_team_data(team_id, header=None, s=requests.Session()):
+def get_team_data(team_id, headers=None, s=requests.Session()):
     '''
     Gets team data from API. Returns dataframe
     cryo-gen team_id = 2740
 
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_riders&id={team_id}'
-    zp_api = s.get(url, header=header)
-    return pd.DataFrame(s.get(zp_api, header=header).json()['data'])
+    zp_api = s.get(url, headers=headers)
+    return pd.DataFrame(s.get(zp_api, headers=headers).json()['data'])
 
 
-def get_user_page(zp_id, header=None, s=requests.Session()):
+def get_user_page(zp_id, headers=None, s=requests.Session()):
     '''
     Get the user profile page
     zp_id = 593408
     '''
     url = f'https://www.zwiftpower.com/profile.php?z={zp_id}'
-    return BeautifulSoup(s.get(url, header=header).content, 'html.parser')
+    return BeautifulSoup(s.get(url, headers=headers).content, 'html.parser')
 
 
-def get_user_data(zp_id, header=None, s=requests.Session()):
+def get_user_data(zp_id, headers=None, s=requests.Session()):
     '''
     Get user data from API
     zp_id = 593408
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=profile_results&z={zp_id}'
-    return pd.DataFrame(s.get(url, header=header).json()['data'])
+    return pd.DataFrame(s.get(url, headers=headers).json()['data'])
 
 
-def get_user_avitar(zp_id, header=None, s=requests.Session()):
+def get_user_avitar(zp_id, headers=None, s=requests.Session()):
     '''
     Get user avitar
     zp_id = 593408
@@ -64,22 +64,22 @@ def get_user_avitar(zp_id, header=None, s=requests.Session()):
         print(f'https://www.zwiftpower.com/profile.php?z={zp_id}')
 
 
-def get_team_results_data(team_id, header=None, s=requests.Session()):
+def get_team_results_data(team_id, headers=None, s=requests.Session()):
     '''
     team_id: 240
     https://www.zwiftpower.com/api3.php?do=team_results&id=2740&_=1578282315864
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_results&id={team_id}'
-    return pd.DataFrame(s.get(url, header=header).json()['data'])
+    return pd.DataFrame(s.get(url, headers=headers).json()['data'])
 
 
-def get_team_avitars(team_ids, header=None, s=requests.Session()):
+def get_team_avitars(team_ids, headers=None, s=requests.Session()):
     '''
     team_ids from a ppandas DF, team['zwid']
     '''
     # TODO, check if we have it already, have update all/new
     for r in team_ids:
-        get_user_avitar(r, header=header, s=s)
+        get_user_avitar(r, headers=headers, s=s)
     sleep(randint(0, 3))  # just to be nice to ZP
 
 
