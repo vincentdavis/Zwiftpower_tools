@@ -78,12 +78,12 @@ def get_team_results_data(team_id, headers=None, s=requests.Session()):
     return pd.DataFrame(s.get(url, headers=headers).json()['data'])
 
 
-def get_team_avitars(team_ids, out_folder='profile_img', update_all=False, headers=None, s=requests.Session()):
+def get_team_avitars(team_ids, out_path='profile_img', update_all=False, headers=None, s=requests.Session()):
     '''
     team_ids from a ppandas DF, team['zwid']
     '''
     if update_all==False: #only adds new persons
-        list_of_ids = [f.lstrip('zwid_').split('_')[0] for f in os.listdir(out_folder) if f.endswith(".jpeg")]
+        list_of_ids = [f.lstrip('zwid_').split('_')[0] for f in os.listdir(out_path) if f.endswith(".jpeg")]
     for r in team_ids:
         if update_all == True: # get everything again
             get_user_avitar(r, headers=headers, s=s)
@@ -93,7 +93,7 @@ def get_team_avitars(team_ids, out_folder='profile_img', update_all=False, heade
                 get_user_avitar(r, headers=headers, s=s)
                 sleep(1)
 
-def create_team_collage(width, height, folder):
+def make_collage(width, height, folder):
     '''make a collage from all images in folder'''
     listofimages = [f for f in os.listdir(folder) if f.endswith(".jpeg")]
     cols = (len(listofimages) ** .5)

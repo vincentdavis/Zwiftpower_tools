@@ -4,3 +4,4 @@ bs4
 notebook
 wget
 pillow
+httpimport
