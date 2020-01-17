@@ -108,4 +108,10 @@ def get_team_list(headers=None, s=requests.Session()):
     '''
     url = f'https://zwiftpower.com/api3.php?do=team_list'
     team_list = s.get(url, headers=headers)
-    return pd.DataFrame(team_list.json()['data'])
+    zp_team_list = pd.DataFrame(team_list.json()['data'])
+    zp_team_list['races'] = zp_team_list['races'].replace({'': 0})
+    zp_team_list['riders'] = zp_team_list['riders'].replace({'': 0})
+    zp_team_list = zp_team_list.astype({'races': 'int32', 'riders': 'int32'})
+    zp_team_list.sort_values(by='riders', ascending=False, inplace=True)
+    zp_team_list['racer_rider_ratio'] = zp_team_list.races / zp_team_list.riders
+    return zp_team_list
