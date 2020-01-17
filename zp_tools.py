@@ -13,29 +13,11 @@ import random
 
 # A set of tools to get data from Zwift power.
 
-def get_team_page(team_id, headers=None, s=requests.Session()):
-    '''
-    Gets full team page content.
-    cryo-gen team_id = 2740
-    '''
-    url = f'https://www.zwiftpower.com/team.php?id={team_id}'
-    return BeautifulSoup(s.get(url, headers=headers).content, 'html.parser')
-
-
-def get_team_data(team_id, headers=None, s=requests.Session()):
-    '''
-    Gets team data from API. Returns dataframe
-    cryo-gen team_id = 2740
-
-    '''
-    url = f'https://www.zwiftpower.com/api3.php?do=team_riders&id={team_id}'
-    team_data = s.get(url, headers=headers)
-    if team_data.status_code != 200:
-      return None
-      # return [{'status': team_data.status_code},]
-    else:
-      return pd.DataFrame(team_data.json()['data'])
-
+"""
+################################
+Individual tools
+################################
+"""
 
 def get_user_page(zp_id, headers=None, s=requests.Session()):
     '''
@@ -68,6 +50,34 @@ def get_user_avitar(zp_id, out_folder='profile_img', headers=None, s=requests.Se
         print(ex)
         print(f'https://www.zwiftpower.com/profile.php?z={zp_id}')
 
+"""
+################################
+Team tools
+################################
+"""
+
+def get_team_page(team_id, headers=None, s=requests.Session()):
+    '''
+    Gets full team page content.
+    cryo-gen team_id = 2740
+    '''
+    url = f'https://www.zwiftpower.com/team.php?id={team_id}'
+    return BeautifulSoup(s.get(url, headers=headers).content, 'html.parser')
+
+
+def get_team_data(team_id, headers=None, s=requests.Session()):
+    '''
+    Gets team data from API. Returns dataframe
+    cryo-gen team_id = 2740
+
+    '''
+    url = f'https://www.zwiftpower.com/api3.php?do=team_riders&id={team_id}'
+    team_data = s.get(url, headers=headers)
+    if team_data.status_code != 200:
+      return None
+      # return [{'status': team_data.status_code},]
+    else:
+      return pd.DataFrame(team_data.json()['data'])
 
 def get_team_results_data(team_id, headers=None, s=requests.Session()):
     '''
@@ -76,7 +86,6 @@ def get_team_results_data(team_id, headers=None, s=requests.Session()):
     '''
     url = f'https://www.zwiftpower.com/api3.php?do=team_results&id={team_id}'
     return pd.DataFrame(s.get(url, headers=headers).json()['data'])
-
 
 def get_team_avitars(team_ids, out_path='profile_img', update_all=False, headers=None, s=requests.Session()):
     '''
@@ -92,41 +101,3 @@ def get_team_avitars(team_ids, out_path='profile_img', update_all=False, headers
             if str(r) not in list_of_ids:
                 get_user_avitar(r, headers=headers, s=s)
                 sleep(1)
-
-def make_collage(width, height, folder):
-    '''make a collage from all images in folder'''
-    listofimages = [f for f in os.listdir(folder) if f.endswith(".jpeg")]
-    cols = (len(listofimages) ** .5)
-    if cols == math.floor(cols):
-        rows = cols
-    else:
-        cols = math.floor(cols)
-        rows = cols + 1
-    filler_count = cols*rows - len(listofimages)
-    for c in range(filler_count):
-        listofimages.append(random.choice(listofimages))
-    thumbnail_width = width // cols
-    thumbnail_height = height // rows
-    size = thumbnail_width, thumbnail_height
-    new_im = Image.new('RGB', (width, height))
-    ims = []
-    for p in listofimages:
-        im = Image.open(folder + '/' + p)
-        im.thumbnail(size)
-        ims.append(im)
-    i = 0
-    x = 0
-    y = 0
-    for col in range(cols):
-        for row in range(rows):
-            print(i, x, y)
-            try:
-                new_im.paste(ims[i], (x, y))
-                i += 1
-                y += thumbnail_height
-            except:
-                continue
-        x += thumbnail_width
-        y = 0
-
-    new_im.save("Collage.jpg")
