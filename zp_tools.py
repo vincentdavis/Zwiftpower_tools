@@ -113,5 +113,5 @@ def get_team_list(headers=None, s=requests.Session()):
     zp_team_list['riders'] = zp_team_list['riders'].replace({'': 0})
     zp_team_list = zp_team_list.astype({'races': 'int32', 'riders': 'int32'})
     zp_team_list.sort_values(by='riders', ascending=False, inplace=True)
-    zp_team_list['racer_rider_ratio'] = zp_team_list.races / zp_team_list.riders
+    zp_team_list['races_rider_ratio'] = zp_team_list.races / zp_team_list.riders
     return zp_team_list
