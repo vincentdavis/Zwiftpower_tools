@@ -101,3 +101,11 @@ def get_team_avitars(team_ids, out_path='profile_img', update_all=False, headers
             if str(r) not in list_of_ids:
                 get_user_avitar(r, headers=headers, s=s)
                 sleep(1)
+
+def get_team_list(headers=None, s=requests.Session()):
+    '''
+    Get a list of all teams
+    '''
+    url = f'https://zwiftpower.com/api3.php?do=team_list'
+    team_list = s.get(url, headers=headers)
+    return pd.DataFrame(team_list.json()['data'])
