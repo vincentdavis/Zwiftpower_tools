@@ -5,3 +5,4 @@ notebook
 wget
 pillow
 httpimport
+peewee

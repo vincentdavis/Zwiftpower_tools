@@ -1,9 +1,14 @@
+import os
+from typing import Any, Union
+
 import requests
 from PIL import Image
 from math import floor
 from random import choice
 from zp_tools import get_team_data, get_team_avitars, get_team_data
 
+def team_riders_to_csv(team_id, out_file='team_riders.csv'):
+    get_team_data(team_id).to_csv(out_file)
 
 class create_team_collage(object):
     """
@@ -19,6 +24,7 @@ class create_team_collage(object):
         self.avitar_path = avitar_path
         self. team_id = team_id
         self.update_all = update_all
+        self.image_size = None
 
     def make_collage(self):
         '''make a collage from all images in folder'''
