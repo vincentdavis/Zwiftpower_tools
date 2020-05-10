@@ -2,4 +2,4 @@
 
 #### Starting examples
 
-[![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Heteroskedastic/Zwiftpower_tools/blob/master/master?filepath=index.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Heteroskedastic/Zwiftpower_tools/blob/master/master?filepath=index.ipynb)
