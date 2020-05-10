@@ -61,6 +61,8 @@ def get_team_page(team_id, headers=None, s=requests.Session()):
     Gets full team page content.
     cryo-gen team_id = 2740
     '''
+    if headers == None:
+        headers = headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36'}
     url = f'https://www.zwiftpower.com/team.php?id={team_id}'
     return BeautifulSoup(s.get(url, headers=headers).content, 'html.parser')
 
@@ -77,7 +79,12 @@ def get_team_data(team_id, headers=None, s=requests.Session()):
       return None
       # return [{'status': team_data.status_code},]
     else:
-      return pd.DataFrame(team_data.json()['data'])
+        team = pd.DataFrame(team_data.json()['data'])
+        team['URL'] = 'https://www.zwiftpower.com/profile.php?z=' + str(team.zwid)
+        team.sort_values(by=['div', 'divw'], ascending=False, inplace=True)
+        team['div_letter'] = team_selected['div'].replace({40:'D', 30:'C', 20:'B', 10:'A',  5:'A+',  0:'Z'})
+        team['divw_letter'] = team_selected['divw'].replace({40:'D', 30:'C', 20:'B', 10:'A',  5:'A+',  0:'Z'})
+        return team
 
 def get_team_results_data(team_id, headers=None, s=requests.Session()):
     '''
