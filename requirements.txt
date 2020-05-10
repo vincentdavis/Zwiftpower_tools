@@ -6,3 +6,5 @@ wget
 pillow
 httpimport
 peewee
+plotly
+chart_studio
