@@ -5,6 +5,10 @@ notebook
 wget
 pillow
 httpimport
-peewee
+# peewee
 plotly
-chart_studio
+# chart_studio
+# lxml
+# html5lib
+# requests-html
+# nest_asyncio

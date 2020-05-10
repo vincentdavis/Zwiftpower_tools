@@ -82,8 +82,8 @@ def get_team_data(team_id, headers=None, s=requests.Session()):
         team = pd.DataFrame(team_data.json()['data'])
         team['URL'] = 'https://www.zwiftpower.com/profile.php?z=' + str(team.zwid)
         team.sort_values(by=['div', 'divw'], ascending=False, inplace=True)
-        team['div_letter'] = team_selected['div'].replace({40:'D', 30:'C', 20:'B', 10:'A',  5:'A+',  0:'Z'})
-        team['divw_letter'] = team_selected['divw'].replace({40:'D', 30:'C', 20:'B', 10:'A',  5:'A+',  0:'Z'})
+        team['div_letter'] = team['div'].replace({40:'D', 30:'C', 20:'B', 10:'A',  5:'A+',  0:'Z'})
+        team['divw_letter'] = team['divw'].replace({40:'D', 30:'C', 20:'B', 10:'A',  5:'A+',  0:'Z'})
         return team
 
 def get_team_results_data(team_id, headers=None, s=requests.Session()):
