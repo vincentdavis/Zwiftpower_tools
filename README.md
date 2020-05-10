@@ -1,3 +1,5 @@
+### You can laund the notebooks in Binder.
 
-You should be able to run the notebooks by
-$ jupyter notebook
+#### Starting examples
+
+[![Binder](http://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Heteroskedastic/Zwiftpower_tools/blob/master/master?filepath=index.ipynb)
