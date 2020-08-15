@@ -192,6 +192,7 @@ class Team(object):
         for k in team_riders:
             k["div_letter"] = num_to_letter[k["div"]]
             k["divw_letter"] = num_to_letter[k["divw"]]
+        self.riders = team_riders
 
 
     def get_team_avitars(team_ids, out_path="profile_img", update_all=False):
