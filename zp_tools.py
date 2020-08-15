@@ -189,7 +189,7 @@ class Team(object):
         """
         team_riders = self.s.get(self.data_url, headers=self.headers).json()["data"]
         num_to_letter = {40: "D", 30: "C", 20: "B", 10: "A", 5: "A+", 0: "E"}
-        for k in team_riders.keys():
+        for k in team_riders:
             k["div_letter"] = num_to_letter[k["div"]]
             k["divw_letter"] = num_to_letter[k["divw"]]
 
