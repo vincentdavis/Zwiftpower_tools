@@ -5,7 +5,7 @@ import requests
 from PIL import Image
 from math import floor
 from random import choice
-from zp_tools import get_team_data, get_team_avitars, get_team_data
+from zp_tools_old import get_team_data, get_team_avitars, get_team_data
 
 def team_riders_to_csv(team_id, out_file='team_riders.csv'):
     get_team_data(team_id).to_csv(out_file)
@@ -17,7 +17,7 @@ class create_team_collage(object):
     team_id: The zp team id "2740" # CRYO-GEN
     update_all: Suggest False unless its the first run. Get avitars for All or only those not found in the folder. Suggest False
     Example:
-    create_team_collage(r'data/collage.jpeg', r'data/avitars', '2740', update_all=Fasle)
+    create_team_collage(r'data/collage.jpeg', r'data/avitars', '2740', update_all=False)
     """
     def __init__(self, img_path, avitar_path, team_id, update_all):
         self.img_path = img_path

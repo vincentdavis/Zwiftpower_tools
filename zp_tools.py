@@ -17,7 +17,7 @@ from datetime import datetime
 # A set of tools to get data from Zwift power.
 
 
-class rider(object):
+class Rider(object):
     """
     Represents a rider:
     Typically you what the run get_profile_details whihc completes the profile data.
@@ -43,44 +43,50 @@ class rider(object):
             self.avitar_url = self.page_xml.find("img", {"class": "img-circle"}).get("src")
         else:
             self.avitar_url = None
-        self.profile['long_bio'] = self.page_xml.find(id='long_bio').text
-        self.profile['zwift_level'] = self.page_xml.find(title='Zwift in-game level').text
+        self.profile['long_bio'] = self.page_xml.find(id='long_bio').text if self.page_xml.find(id='long_bio') else None
+        self.profile['zwift_level'] = self.page_xml.find(title='Zwift in-game level').text if self.page_xml.find(title='Zwift in-game level') else None
         table = self.page_xml.find("table", id="profile_information")
-        table_rows = table.find_all("tr")
-        for tr in table_rows:
-            td = tr.find_all(["td", "th"])
-            row = [i.text.strip() for i in td]
-            #print(row)
-            if "Country" in row and not row[1][0].isdigit():
-                self.profile["country"] = row[1] or None
-            if "Race Ranking" in row:
-                self.profile["race_rank_pts"] = int("".join(c for c in row[1].split(" ")[0] if c.isdigit()))
-                self.profile["race_rank_place"] = int("".join(c for c in row[1].split(" pts in ")[1] if c.isdigit()))
-            if "Category" in row:
+        if table:
+            table_rows = table.find_all("tr")
+            for tr in table_rows:
+                td = tr.find_all(["td", "th"])
+                row = [i.text.strip() for i in td]
+                #print(row)
+                if "Country" in row and not row[1][0].isdigit():
+                    self.profile["country"] = row[1] or None
+                if "Race Ranking" in row:
+                    self.profile["race_rank_pts"] = int("".join(c for c in row[1].split(" ")[0] if c.isdigit()))
+                    self.profile["race_rank_place"] = int("".join(c for c in row[1].split(" pts in ")[1] if c.isdigit()))
+                if "Category" in row:
 
-                self.profile["race_rank_catagory"] = int("".join(c for c in row[1] if c.isdigit()))
-            if "Age Group" in row:
-                self.profile["race_rank_age"] = int("".join(c for c in row[1] if c.isdigit()))
-            if "Weight Group" in row:
-                self.profile["race_rank_weight"] = int("".join(c for c in row[1] if c.isdigit()))
-            if "Team" in row:
-                row_test = "".join(c for c in row[1] if c.isdigit())
-                if row_test.isdigit():
-                    self.profile["race_rank_team"] = int("".join(c for c in row[1] if c.isdigit()))
-                else:
-                    self.profile["race_team"] = row[1] or None
-            if "Minimum Category" in row:
-                self.profile["minimum_category"] = row[1][0] or None
-                self.profile["minumun_catagory_female"] = row[1][2] if row[1][2] in ['A', 'B', 'C', 'D', 'E'] else None
-                self.profile['races'] = int("".join(c for c in row[1] if c.isdigit()))
-            if "Age" in row:
-                self.profile["age"] = row[1] or None
-            if "Average" in row:
-                self.profile["average_watts"] = int(row[1].split("watts")[0])
-                self.profile["average_wkg"] = float(row[1].split(" / ")[1].replace("wkg", ""))
-            if "FTP" in row:
-                self.profile["ftp"] = int(row[1].split("w")[0])
-                self.profile["kg"] = int("".join(c for c in row[1].split('~ ')[1] if c.isdigit()))
+                    self.profile["race_rank_catagory"] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Age Group" in row:
+                    self.profile["race_rank_age"] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Weight Group" in row:
+                    self.profile["race_rank_weight"] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Team" in row:
+                    row_test = "".join(c for c in row[1] if c.isdigit())
+                    if row_test.isdigit():
+                        self.profile["race_rank_team"] = int("".join(c for c in row[1] if c.isdigit()))
+                    else:
+                        self.profile["race_team"] = row[1] or None
+                if "Minimum Category" in row:
+                    self.profile["minimum_category"] = row[1][0] or None
+                    self.profile["minumun_catagory_female"] = row[1][2] if row[1][2] in ['A', 'B', 'C', 'D', 'E'] else None
+                    self.profile['races'] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Age" in row:
+                    self.profile["age"] = row[1] or None
+                if "Average" in row:
+                    self.profile["average_watts"] = int(row[1].split("watts")[0])
+                    self.profile["average_wkg"] = float(row[1].split(" / ")[1].replace("wkg", ""))
+                if "FTP" in row:
+                    try:
+                        self.profile["ftp"] = int(row[1].split("w")[0])
+                        self.profile["kg"] = int("".join(c for c in row[1].split('~ ')[1] if c.isdigit()))
+                    except:
+                        self.profile["ftp"] = None
+                        self.profile["kg"] = None
+        return self.profile
 
     def get_data(self):
         """
@@ -190,25 +196,53 @@ class Team(object):
         team_riders = self.s.get(self.data_url, headers=self.headers).json()["data"]
         num_to_letter = {40: "D", 30: "C", 20: "B", 10: "A", 5: "A+", 0: "E"}
         for k in team_riders:
-            k["div_letter"] = num_to_letter[k["div"]]
-            k["divw_letter"] = num_to_letter[k["divw"]]
+            k["Category"] = num_to_letter[k["div"]]
+            k["Category_female"] = num_to_letter[k["divw"]]
+            k['races'] = k.pop('r')
+            k['ftp'] = k.pop('ftp')[0]
+            k['watts'] = k.pop('w')[0]
         self.riders = team_riders
+        return self.riders
 
 
-    def get_team_avitars(team_ids, out_path="profile_img", update_all=False):
+    def get_more_rider_data(self):
+        """
+        Agments the data with more data from the Rider class.
+        """
+        if not self.riders:
+            self.get_team_riders()
+        for r in self.riders:
+            print(f"get rider {r['name']} data.")
+            rider = Rider(zwid=r['zwid'])
+            try:
+                r.update(rider.get_profile_details())
+            except:
+                print(f"Failed with rider {r['name']}")
+            sleep(.25)
+
+    def riders_to_csv(self, filename='team_list.csv'):
+        if not self.riders:
+            self.get_team_riders()
+        pd.DataFrame(self.riders).to_csv(filename)
+
+
+
+    def get_team_avitars(self, out_path="profile_img", update_all=False):
         """
         team_ids from a ppandas DF, team['zwid']
         """
         if update_all == False:  # only adds new persons
             list_of_ids = [f.lstrip("zwid_").split("_")[0] for f in os.listdir(out_path) if f.endswith(".jpeg")]
-        for r in team_ids:
+        for r in self.riders:
+            rider = Rider(zwid=r['zwid'])
             if update_all == True:  # get everything again
-                get_user_avitar(r, headers=headers, s=s)
+                rider.get_user_avitar(out_folder=out_path)
                 sleep(randint(0, 3))
             else:  # only get new
-                if str(r) not in list_of_ids:
-                    get_user_avitar(r, headers=headers, s=s)
+                if str(r['zwid']) not in list_of_ids:
+                    rider.get_user_avitar(out_folder=out_path)
                     sleep(1)
+
 
 
 def get_team_list(headers=None, s=requests.Session()):
