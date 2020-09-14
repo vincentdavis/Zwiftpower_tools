@@ -132,3 +132,6 @@ Team_results.ipynb
 .DS_Store
 .idea
 data
+/.vscode/
+.vscode
+local_files

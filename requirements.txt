@@ -6,7 +6,10 @@ wget
 pillow
 httpimport
 # peewee
+tinydb
 plotly
+black
+pymongo
 # chart_studio
 # lxml
 # html5lib
