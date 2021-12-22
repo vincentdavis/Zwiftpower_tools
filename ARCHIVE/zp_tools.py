@@ -13,8 +13,18 @@ import random
 import json
 from datetime import datetime
 
+from requests_html import HTMLSession
+
+
 
 # A set of tools to get data from Zwift power.
+
+class connection(object):
+    """
+    Login to ZwiftPower.com
+    """
+    r = session.get('https://zwiftpower.com')
+    if "Login Required" in r.text
 
 
 class Rider(object):
