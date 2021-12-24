@@ -4,7 +4,7 @@ bs4
 notebook
 wget
 pillow
-httpimport
+# httpimport
 # peewee
 tinydb
 plotly
@@ -13,5 +13,5 @@ pymongo
 # chart_studio
 # lxml
 # html5lib
-# requests-html
+requests-html
 # nest_asyncio
