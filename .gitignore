@@ -135,3 +135,5 @@ data
 /.vscode/
 .vscode
 local_files
+z_database.json
+config.ini
