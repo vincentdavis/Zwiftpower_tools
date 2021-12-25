@@ -135,5 +135,6 @@ data
 /.vscode/
 .vscode
 local_files
-z_database.json
 config.ini
+zwift-WTRL mongodb ca-certificate.cer
+database/z_database.json

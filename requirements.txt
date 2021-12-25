@@ -1,17 +1,16 @@
 pandas
 requests
-bs4
-notebook
-wget
-pillow
+tinydb
+requests-html
+pymongo
+# plotly
+# pillow
 # httpimport
 # peewee
-tinydb
-plotly
-black
-pymongo
+# pymongo
 # chart_studio
 # lxml
 # html5lib
-requests-html
+# notebook
 # nest_asyncio
+# wget
