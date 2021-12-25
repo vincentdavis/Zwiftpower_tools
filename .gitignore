@@ -138,3 +138,4 @@ local_files
 config.ini
 zwift-WTRL mongodb ca-certificate.cer
 database/z_database.json
+zp_tools.code-workspace
