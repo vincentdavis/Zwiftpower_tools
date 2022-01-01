@@ -4,13 +4,12 @@ from datetime import date
 
 from requests_html import HTMLSession
 
-from tinydb import TinyDB
-from tinydb import Query
 
 try:
     from pymongo import MongoClient
 except:
     pass
+import logging
 
 class ZMongodb(object):
     def __init__(self):
@@ -19,50 +18,22 @@ class ZMongodb(object):
             config.read('config.ini')
             mongoauth = config['MONGODB']['auth']
         except Exception as e:
-            print('login: Need a proper config.ini file or supply auth info')
-            raise e
-        self.client = MongoClient(mongoauth, tlsCAFile="zwift-WTRL mongodb ca-certificate.cer")
-        self.db = self.client['zwiftandmore']
+            logging.info('login: Need a proper config.ini file or supply auth info')
+            #default local
+        try:
+            self.client = MongoClient(mongoauth, tlsCAFile="zwift-WTRL mongodb ca-certificate.cer")
+        except Exception:
+            self.client = MongoClient()
+        # database
+        self.db = self.client.database
+        self.collection = self.db['zwiftandmore']
         self.cached = {'results': self.db['results'], 'teams': self.db['teams'],
                        'profiles': self.db['profiles'], 'teamlist': self.db['teamlist'],
                        'live': self.db['live']}
 
-        def check_cache(self, table, zid):
-            # TODO should make sure there are not more then 1
-            # TODO Get most recent.
-            is_in_cache = self.cached[table].get(QID.zid == zid)
-            is_in_cache = self.cached[table].find_one()
-            if is_in_cache is not None:
-                return is_in_cache
-            else:
-                return None
-
-        def mostrecent(self, table):
-            dbtable = self.cached[table]
-            if dbtable.all():
-                return dbtable.get(doc_id=dbtable.all()[-1].doc_id)
-            else:
-                return None
-
-
-
-class ZDatabase(object):
-    """
-    database class needs to have:
-    check_cache:
-    mostrecent:
-    upsert
-    """
-    def __init__(self, db_path='database/z_database.json'):
-        self.db_path = db_path
-        self.db = TinyDB(db_path)
-        self.cached = {'results': self.db.table('results'), 'teams': self.db.table('teams'),
-                       'profiles': self.db.table('profiles'), 'teamlist': self.db.table('teamlist'),
-                       'live': self.db.table('live')}
-
     def check_cache(self, table, zid):
-        QID = Query()
-        is_in_cache = self.cached[table].get(QID.zid == zid)
+        # is_in_cache = self.cached[table].get(QID.zid == zid)
+        is_in_cache = self.cached[table].find_one()
         if is_in_cache is not None:
             return is_in_cache
         else:
@@ -75,13 +46,11 @@ class ZDatabase(object):
         else:
             return None
 
-    def upsert(self, table, data):
-        QID = Query()
-        self.cached[table].upsert(data, QID.zid == data['zid'])
+
 
 
 class FetchJson(object):
-    def __init__(self, login_data=None, db=ZDatabase()):
+    def __init__(self, login_data=None, db=ZMongodb()):
         if login_data is None:
             try:
                 config = configparser.ConfigParser()
@@ -90,7 +59,7 @@ class FetchJson(object):
                                    'password': config['LOGIN']['password'],
                                    'login': 'Login'}
             except Exception as e:
-                print('login_data: Need a proper config.ini file or supply login info')
+                logging.info('login_data: Need a proper config.ini file or supply login info')
                 raise e
         else:
             self.login_data = login_data
@@ -101,17 +70,15 @@ class FetchJson(object):
         if self.session is None:
             self.session = HTMLSession()
             z = self.session.get('https://zwiftpower.com')
-            # TODO log rather then print
-            # print(z.cookies.get('phpbb3_lswlk_sid'))
+            logging.info(z.cookies.get('phpbb3_lswlk_sid'))
             self.login_data['sid'] = z.cookies.get('phpbb3_lswlk_sid')
         if "Login Required" in z.text:  # get logged in
             try:
                 self.session.post("https://zwiftpower.com", data=self.login_data)
                 assert "Profile" in self.session.get("https://zwiftpower.com/events.php").text
-                print('Login successful')
+                logging.info('Login successful')
             except Exception as e:
-                # TODO log rather then print
-                print(f"Failed to login: {e}")
+                logging.error(f"Failed to login: {e}")
 
     def fetch_result(self, zid, refresh=False):
         """
@@ -137,11 +104,10 @@ class FetchJson(object):
                 with self.session.get(zwifturl) as res:
                     zwift = res.json()
                 result = {'zid': zid, 'timestamp': tstamp, 'view_data': view['data'], 'zwift_data': zwift['data']}
-                self.db.upsert("results", result)
+                self.db.collection.insert_one(result)
                 return result
             except Exception as e:
-                # TODO log rather then print
-                print(f"result error: {e}")
+                logging.error(f"Fetch Result Error: {e}")
     def fetch_live_results(self, zid):
         """
         work in progress
@@ -156,8 +122,7 @@ class FetchJson(object):
         #     # self.db.upsert("results", result)
         #     # return result
         # except Exception as e:
-        #     # TODO log rather then print
-        #     print(f"datetime.datetime.utcnow(): Live data error: {e}")
+        #     logging.error(f"datetime.datetime.utcnow(): Live data error: {e}")
         pass
 
 
@@ -177,11 +142,10 @@ class FetchJson(object):
                 with self.session.get(teamurl) as res:
                     teamdata = res.json()
                     team: dict[str, Any] = {'zid': zid, 'tstamp': tstamp, 'team': teamdata['data']}
-                self.db.upsert("teams", team)
+                self.db.collection.insert_one(team)
                 return team
             except Exception as e:
-                # TODO log rather then print
-                print(f"fetch_team error: {e}")
+                logging.info(f"fetch_team error: {e}")
                 return None
 
     def fetch_teamlist(self, refresh=False):
@@ -203,11 +167,10 @@ class FetchJson(object):
                 with self.session.get(teamlisturl) as res:
                     teamlistdata = res.json()
                     teamlistdata = {'zid': day, 'tstamp': tstamp, 'teamlist': teamlistdata['data']}
-                self.db.upsert("teamlist", teamlistdata)
+                self.db.collection.insert_one(teamlistdata)
                 return teamlistdata
             except Exception as e:
-                # TODO log rather then print
-                print(f"fetch_team list error: {e}")
+                logging.error(f"fetch_team list error: {e}")
 
     def fetch_profile(self, zid, refresh=False):
         """
@@ -231,11 +194,10 @@ class FetchJson(object):
                 with self.session.get(analysisurl) as res:
                     analysis = res.json()
                 profile = {'zid': zid, 'tstamp': tstamp, 'pall': pall['data'], 'victim': victim['data'], 'analysis': analysis['data']}
-                self.db.upsert("profiles", profile)
+                self.db.collection.insert_one(profile)
                 return profile
             except Exception as e:
-                # TODO log rather then print
-                print(f"fetch_profile error: {e}")
+                logging.error(f"fetch_profile error: {e}")
 
     def fetch_profile2(self):
         """
