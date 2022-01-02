@@ -1,53 +1,13 @@
 import configparser
 import datetime
 from datetime import date
+from typing import Any
 
+
+from bs4 import BeautifulSoup
 from requests_html import HTMLSession
-
-
-try:
-    from pymongo import MongoClient
-except:
-    pass
 import logging
-
-class ZMongodb(object):
-    def __init__(self):
-        try:
-            config = configparser.ConfigParser()
-            config.read('config.ini')
-            mongoauth = config['MONGODB']['auth']
-        except Exception as e:
-            logging.info('login: Need a proper config.ini file or supply auth info')
-            #default local
-        try:
-            self.client = MongoClient(mongoauth, tlsCAFile="zwift-WTRL mongodb ca-certificate.cer")
-        except Exception:
-            self.client = MongoClient()
-        # database
-        self.db = self.client.database
-        self.collection = self.db['zwiftandmore']
-        self.cached = {'results': self.db['results'], 'teams': self.db['teams'],
-                       'profiles': self.db['profiles'], 'teamlist': self.db['teamlist'],
-                       'live': self.db['live']}
-
-    def check_cache(self, table, zid):
-        # is_in_cache = self.cached[table].get(QID.zid == zid)
-        is_in_cache = self.cached[table].find_one()
-        if is_in_cache is not None:
-            return is_in_cache
-        else:
-            return None
-
-    def mostrecent(self, table):
-        dbtable = self.cached[table]
-        if dbtable.all():
-            return dbtable.get(doc_id=dbtable.all()[-1].doc_id)
-        else:
-            return None
-
-
-
+from ZMongodb import ZMongodb
 
 class FetchJson(object):
     def __init__(self, login_data=None, db=ZMongodb()):
@@ -199,11 +159,92 @@ class FetchJson(object):
             except Exception as e:
                 logging.error(f"fetch_profile error: {e}")
 
-    def fetch_profile2(self):
+    def fetch_profile2(self, zwid, refresh=False, avatar=False):
         """
-        Not implemented.
+        Testing
         """
-        # with self.session.get("https://zwiftpower.com/profile.php?z=1703891") as res:
-        #     r = res
-        #     return (r, self.session)
-        pass
+        page_url = f"https://zwiftpower.com/profile.php?z={zwid}"
+        page_xml = BeautifulSoup(self.session.get(page_url).content, "lxml")
+        profile = {}
+        aurl = page_xml.find("img", {"class": "img-circle"})
+        if aurl:
+            profile['avatar_url'] = page_xml.find("img", {"class": "img-circle"}).get("src")
+        else:
+            profile['avatar_url'] = None
+        profile['long_bio'] = page_xml.find(id='long_bio').text if page_xml.find(
+            id='long_bio') else None
+        profile['zwift_level'] = page_xml.find(
+            title='Zwift in-game level').text if page_xml.find(title='Zwift in-game level') else None
+        table = page_xml.find("table", id="profile_information")
+        if table:
+            table_rows = table.find_all("tr")
+            for tr in table_rows:
+                td = tr.find_all(["td", "th"])
+                row = [i.text.strip() for i in td]
+                # print(row)
+                if "Country" in row and not row[1][0].isdigit():
+                    profile["country"] = row[1] or None
+                if "Race Ranking" in row:
+                    profile["race_rank_pts"] = int("".join(c for c in row[1].split(" ")[0] if c.isdigit()))
+                    profile["race_rank_place"] = int(
+                        "".join(c for c in row[1].split(" pts in ")[1] if c.isdigit()))
+                if "Category" in row:
+                    profile["race_rank_catagory"] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Age Group" in row:
+                    profile["race_rank_age"] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Weight Group" in row:
+                    profile["race_rank_weight"] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Team" in row:
+                    row_test = "".join(c for c in row[1] if c.isdigit())
+                    if row_test.isdigit():
+                        profile["race_rank_team"] = int("".join(c for c in row[1] if c.isdigit()))
+                    else:
+                        profile["race_team"] = row[1] or None
+                if "Minimum Category" in row:
+                    profile["minimum_category"] = row[1][0] or None
+                    profile["minumun_catagory_female"] = row[1][2] if row[1][2] in ['A', 'B', 'C', 'D',
+                                                                                         'E'] else None
+                    profile['races'] = int("".join(c for c in row[1] if c.isdigit()))
+                if "Age" in row:
+                    profile["age"] = row[1] or None
+                if "Average" in row:
+                    profile["average_watts"] = int(row[1].split("watts")[0])
+                    profile["average_wkg"] = float(row[1].split(" /")[1].replace("wkg", ""))
+                if "FTP" in row:
+                    try:
+                        profile["ftp"] = int(row[1].split("w")[0])
+                        profile["kg"] = int("".join(c for c in row[1].split('~ ')[1] if c.isdigit()))
+                    except:
+                        profile["ftp"] = None
+                        profile["kg"] = None
+            if avatar:
+                try:
+                    tstamp = datetime.datetime.utcnow().isoformat()
+                    file_path = f"database/avatar/{zwid}_{tstamp}.jpeg"
+                    avatar_file = self.z.session.get(profile['avatar_url'])
+                    with open(file_path, 'wb') as local_file:
+                        local_file.write(avatar_file.content)
+                except Exception as e:
+                    logging.error(f"Avatar file save error: {e}")
+                    avatar_file = None
+                finally:
+                    profile['avatar_file'] = avatar_file
+        return profile
+
+            
+
+    # def get_user_Avatar(self, out_folder):
+    #     """
+    #     Get user Avatar
+    #     zp_id = 593408
+    #     """
+    #     if self.Avatar_url is None:
+    #         self.get_profile_details()
+    #     try:
+    #         wget.download(
+    #             self.Avatar_url,
+    #             out=out_folder + "/zwid_" + str(self.zwid) + "_" + self.Avatar_url.rsplit("/", 1)[-1] + ".jpeg",
+    #         )
+    #     except Exception as ex:
+    #         print(ex)
+    #         print(f"The url is: {self.Avatar_url}")

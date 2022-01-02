@@ -1,33 +1,41 @@
-
+import logging
 import configparser
 from pymongo import MongoClient
-from pydantic import BaseModel
 
-try:
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    mongoauth = config['MONGODB']['auth']
-except Exception as e:
-    print('login: Need a proper config.ini file or supply auth info')
-    raise e
+class ZMongodb(object):
+    def __init__(self):
+        try:
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+            mongoauth = config['MONGODB']['auth']
+        except Exception as e:
+            logging.info('login: Need a proper config.ini file or supply auth info')
+            #default local
+        try:
+            self.client = MongoClient(mongoauth, tlsCAFile="zwift-WTRL mongodb ca-certificate.cer")
+        except Exception:
+            self.client = MongoClient()
+        # database
+        self.db = self.client.database
+        self.collection = self.db['zwiftandmore']
+        self.cached = {'results': self.db['results'], 'teams': self.db['teams'],
+                       'profiles': self.db['profiles'], 'teamlist': self.db['teamlist'],
+                       'live': self.db['live']}
 
-def mongodb_connect(database):
-    """
-    https://pythonrepo.com/repo/roman-right-beanie-python-orm
-        # Init beanie with the Note document class
-    await init_beanie(database=client.db_name, document_models=[Note])
-    """
-    client = MongoClient(mongoauth, tlsCAFile="zwift-WTRL mongodb ca-certificate.cer")
-    # await client.server_info()
-    # list(await client.list_database_names())
-    # zwiftandmore
-    return client[database]
+    def check_cache(self, table, zid):
+        # is_in_cache = self.cached[table].get(QID.zid == zid)
+        is_in_cache = self.cached[table].find_one()
+        if is_in_cache is not None:
+            return is_in_cache
+        else:
+            return None
 
-
-db = mongodb_connect('zwiftandmore')
-
-
-
+    def mostrecent(self, table):
+        dbtable = self.cached[table]
+        if dbtable.all():
+            return dbtable.get(doc_id=dbtable.all()[-1].doc_id)
+        else:
+            return None
 
 
 # class zwifting(BaseModel):
