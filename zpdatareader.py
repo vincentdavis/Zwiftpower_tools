@@ -161,7 +161,7 @@ class FetchJson(object):
 
     def fetch_profile2(self, zwid, refresh=False, avatar=False):
         """
-        Testing
+        Avatar should be false or a path "database/avatar/"
         """
         page_url = f"https://zwiftpower.com/profile.php?z={zwid}"
         page_xml = BeautifulSoup(self.session.get(page_url).content, "lxml")
@@ -218,9 +218,10 @@ class FetchJson(object):
                         profile["ftp"] = None
                         profile["kg"] = None
             if avatar:
+                # database/avatar/
                 try:
                     tstamp = datetime.datetime.utcnow().isoformat()
-                    file_path = f"database/avatar/{zwid}_{tstamp}.jpeg"
+                    file_path = f"{avatar}{zwid}_{tstamp}.jpeg"
                     avatar_file = self.z.session.get(profile['avatar_url'])
                     with open(file_path, 'wb') as local_file:
                         local_file.write(avatar_file.content)
@@ -231,20 +232,4 @@ class FetchJson(object):
                     profile['avatar_file'] = avatar_file
         return profile
 
-            
 
-    # def get_user_Avatar(self, out_folder):
-    #     """
-    #     Get user Avatar
-    #     zp_id = 593408
-    #     """
-    #     if self.Avatar_url is None:
-    #         self.get_profile_details()
-    #     try:
-    #         wget.download(
-    #             self.Avatar_url,
-    #             out=out_folder + "/zwid_" + str(self.zwid) + "_" + self.Avatar_url.rsplit("/", 1)[-1] + ".jpeg",
-    #         )
-    #     except Exception as ex:
-    #         print(ex)
-    #         print(f"The url is: {self.Avatar_url}")
