@@ -3,11 +3,11 @@ import datetime
 from datetime import date
 from typing import Any
 
-
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 import logging
 from ZMongodb import ZMongodb
+
 
 class FetchJson(object):
     def __init__(self, login_data=None, db=ZMongodb()):
@@ -68,6 +68,7 @@ class FetchJson(object):
                 return result
             except Exception as e:
                 logging.error(f"Fetch Result Error: {e}")
+
     def fetch_live_results(self, zid):
         """
         work in progress
@@ -84,7 +85,6 @@ class FetchJson(object):
         # except Exception as e:
         #     logging.error(f"datetime.datetime.utcnow(): Live data error: {e}")
         pass
-
 
     def fetch_team(self, zid, refresh=False):
         """
@@ -153,7 +153,8 @@ class FetchJson(object):
                     victim = res.json()
                 with self.session.get(analysisurl) as res:
                     analysis = res.json()
-                profile = {'zid': zid, 'tstamp': tstamp, 'pall': pall['data'], 'victim': victim['data'], 'analysis': analysis['data']}
+                profile = {'zid': zid, 'tstamp': tstamp, 'pall': pall['data'], 'victim': victim['data'],
+                           'analysis': analysis['data']}
                 self.db.collection.insert_one(profile)
                 return profile
             except Exception as e:
@@ -203,7 +204,7 @@ class FetchJson(object):
                 if "Minimum Category" in row:
                     profile["minimum_category"] = row[1][0] or None
                     profile["minumun_catagory_female"] = row[1][2] if row[1][2] in ['A', 'B', 'C', 'D',
-                                                                                         'E'] else None
+                                                                                    'E'] else None
                     profile['races'] = int("".join(c for c in row[1] if c.isdigit()))
                 if "Age" in row:
                     profile["age"] = row[1] or None
@@ -211,18 +212,20 @@ class FetchJson(object):
                     profile["average_watts"] = int(row[1].split("watts")[0])
                     profile["average_wkg"] = float(row[1].split(" /")[1].replace("wkg", ""))
                 if "FTP" in row:
+                    profile["ftp"] = None
+                    profile["kg"] = None
                     try:
                         profile["ftp"] = int(row[1].split("w")[0])
                         profile["kg"] = int("".join(c for c in row[1].split('~ ')[1] if c.isdigit()))
-                    except:
-                        profile["ftp"] = None
-                        profile["kg"] = None
+                    except Exception as e:
+                        logging.error(f"FTP not found: {e}")
+
             if avatar:
                 # database/avatar/
                 try:
                     tstamp = datetime.datetime.utcnow().isoformat()
                     file_path = f"{avatar}{zwid}_{tstamp}.jpeg"
-                    avatar_file = self.z.session.get(profile['avatar_url'])
+                    avatar_file = self.session.get(profile['avatar_url'])
                     with open(file_path, 'wb') as local_file:
                         local_file.write(avatar_file.content)
                 except Exception as e:
@@ -231,5 +234,3 @@ class FetchJson(object):
                 finally:
                     profile['avatar_file'] = avatar_file
         return profile
-
-
