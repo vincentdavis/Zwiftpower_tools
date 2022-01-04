@@ -108,13 +108,13 @@ class FetchJson(object):
                 logging.info(f"fetch_team error: {e}")
                 return None
 
-    def fetch_teamlist(self, refresh=False):
+    def fetch_teamriders(self, refresh=False):
         """
         We use today's date as zid for upsert.
         Gets the list of ZwiftPower teams
         """
         # teamlistownurl = "https://zwiftpower.com/api3.php?do=team_list_own"
-        teamlisturl = "https://zwiftpower.com/api3.php?do=team_list"
+        teamridersurl = "https://zwiftpower.com/api3.php?do=team_list"
         tstamp = datetime.datetime.utcnow().isoformat()
         day = date.today().isoformat()
         is_in_cache = False
@@ -124,11 +124,11 @@ class FetchJson(object):
             return is_in_cache
         else:
             try:
-                with self.session.get(teamlisturl) as res:
-                    teamlistdata = res.json()
-                    teamlistdata = {'zid': day, 'tstamp': tstamp, 'teamlist': teamlistdata['data']}
-                self.db.collection.insert_one(teamlistdata)
-                return teamlistdata
+                with self.session.get(teamridersurl) as res:
+                    teamridersdata = res.json()
+                    teamridersdata = {'zid': day, 'tstamp': tstamp, 'teamlist': teamridersdata['data']}
+                # self.db.collection.insert_one(teamridersdata)
+                return teamridersdata
             except Exception as e:
                 logging.error(f"fetch_team list error: {e}")
 
