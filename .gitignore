@@ -141,3 +141,4 @@ database/z_database.json
 zp_tools.code-workspace
 LOCAL-ONLY
 /database/avitar/
+database/ZFileDb

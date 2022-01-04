@@ -6,11 +6,11 @@ from typing import Any
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 import logging
-from ZMongodb import ZMongodb
+from ZFileDb import ZFileDb
 
 
 class FetchJson(object):
-    def __init__(self, login_data=None, db=ZMongodb()):
+    def __init__(self, login_data=None, db=ZFileDb()):
         if login_data is None:
             try:
                 config = configparser.ConfigParser()
@@ -105,16 +105,16 @@ class FetchJson(object):
                 self.db.collection.insert_one(team)
                 return team
             except Exception as e:
-                logging.info(f"fetch_team error: {e}")
+                logging.info(f"fetch_ateam error: {e}")
                 return None
 
-    def fetch_teamriders(self, refresh=False):
+    def fetch_teamlist(self, refresh=False):
         """
         We use today's date as zid for upsert.
         Gets the list of ZwiftPower teams
         """
         # teamlistownurl = "https://zwiftpower.com/api3.php?do=team_list_own"
-        teamridersurl = "https://zwiftpower.com/api3.php?do=team_list"
+        teamlisturl = "https://zwiftpower.com/api3.php?do=team_list"
         tstamp = datetime.datetime.utcnow().isoformat()
         day = date.today().isoformat()
         is_in_cache = False
@@ -124,13 +124,13 @@ class FetchJson(object):
             return is_in_cache
         else:
             try:
-                with self.session.get(teamridersurl) as res:
-                    teamridersdata = res.json()
-                    teamridersdata = {'zid': day, 'tstamp': tstamp, 'teamlist': teamridersdata['data']}
-                # self.db.collection.insert_one(teamridersdata)
-                return teamridersdata
+                with self.session.get(teamlisturl) as res:
+                    teamlistsdata = res.json()
+                    teamlistsdata = {'zid': f"teamlist_{tstamp}", 'tstamp': tstamp, 'teamlist': teamlistsdata['data']}
+                self.db.upsert('teamlist', teamlistsdata)
+                return teamlistsdata
             except Exception as e:
-                logging.error(f"fetch_team list error: {e}")
+                logging.error(f"fetch_teamlist error: {e}")
 
     def fetch_profile(self, zid, refresh=False):
         """
