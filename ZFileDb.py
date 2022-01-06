@@ -37,7 +37,9 @@ class ZFileDb(object):
             dir_files = [f for f in dir_files if zid]
         if dir_files:
             dir_files = sorted(dir_files, reverse=True)
-            return dir_files[0]
+            with open(f"{self.cached[table]}/{dir_files[0]}", 'r') as j:
+                data = json.load(j)
+            return data
         else:
             return None
 
