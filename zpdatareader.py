@@ -68,6 +68,17 @@ class FetchJson(object):
                 return result
             except Exception as e:
                 logging.error(f"Fetch Result Error: {e}")
+    def event_list(self, search=None):
+        """
+        Search for upcoming events.
+        """
+        event_list_url = "https://zwiftpower.com/cache3/lists/0_zwift_event_list_3.json"
+
+    def result_list(self, search=None):
+        """
+        Search recent events
+        """
+        result_list_url = "https://zwiftpower.com/cache3/lists/0_zwift_event_list_results_3.json?_=1641522900935"
 
     def fetch_live_results(self, zid):
         """
@@ -94,21 +105,21 @@ class FetchJson(object):
         tstamp = datetime.datetime.utcnow().isoformat()
         is_in_cache = False
         if not refresh:
-            is_in_cache = self.db.check_cache('profiles', zid)
+            is_in_cache = self.db.check_cache('teams', zid)
         if is_in_cache:
-            return is_in_cache
+            return is_in_cache, 'cache'
         else:
             try:
                 with self.session.get(teamurl) as res:
                     teamdata = res.json()
                     team: dict[str, Any] = {'zid': zid, 'tstamp': tstamp, 'team': teamdata['data']}
-                self.db.collection.insert_one(team)
-                return team
+                    self.db.upsert('teams', team)
+                return team, 'refresh'
             except Exception as e:
                 logging.info(f"fetch_ateam error: {e}")
                 return None
 
-    def fetch_teamlist(self, refresh=False):
+    def fetch_teamlist(self, refresh=False, sorted="riders"):
         """
         We use today's date as zid for upsert.
         Gets the list of ZwiftPower teams
@@ -234,3 +245,4 @@ class FetchJson(object):
                 finally:
                     profile['avatar_file'] = avatar_file
         return profile
+
