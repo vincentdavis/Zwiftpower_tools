@@ -8,6 +8,7 @@ from requests_html import HTMLSession
 import logging
 from ZFileDb import ZFileDb
 
+logging.basicConfig(filename='fetcher.log', encoding='utf-8', level=logging.DEBUG)
 
 class FetchJson(object):
     def __init__(self, login_data=None, db=ZFileDb()):
@@ -246,3 +247,35 @@ class FetchJson(object):
                     profile['avatar_file'] = avatar_file
         return profile
 
+# class Fetch_WTRL(object):
+#     """
+#     For getting data from WTRL
+#     """
+#     def __init__(self, login_data=None, db=ZFileDb()):
+#         if login_data is None:
+#             try:
+#                 config = configparser.ConfigParser()
+#                 config.read('config.ini')
+#                 self.login_data = config['WTRL']['auth']
+#             except Exception as e:
+#                 logging.info('login_data: Need a proper config.ini file or supply login info')
+#                 raise e
+#         else:
+#             self.login_data = login_data
+#         self.db = db
+#         self.session = HTMLSession()
+#     # s = requests_html.session()
+#     try:
+#         r = self.session.get('https://www.wtrl.racing')
+#         assert r.status_code == 200
+#     except:
+#         logging.error(f"https://www.wtrl.racing returned status code: {r.status_code}")
+#
+#     print(r.status_code)
+#     s.headers.update({"Authorization": self.login_data,  # static for ur account
+#                       "Content-Type": "application/x-www-form-urlencoded"})
+#     r = s.post(url="https://www.wtrl.racing/api/wtrlruby.php",
+#                data={
+#                    "wtrlid": "wtrlttt",
+#                    "season": "140",  # session
+#                    "action": "results"})
