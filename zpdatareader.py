@@ -56,7 +56,7 @@ class FetchJson(object):
         if not refresh:
             is_in_cache = self.db.check_cache('results', zid)
         if is_in_cache:
-            return is_in_cache
+            return is_in_cache, 'cache'
         else:
             try:
                 with self.session.get(viewurl) as res:
@@ -64,8 +64,8 @@ class FetchJson(object):
                 with self.session.get(zwifturl) as res:
                     zwift = res.json()
                 result = {'zid': zid, 'timestamp': tstamp, 'view_data': view['data'], 'zwift_data': zwift['data']}
-                self.db.collection.insert_one(result)
-                return result
+                self.db.upsert('results', result)
+                return result, 'refresh'
             except Exception as e:
                 logging.error(f"Fetch Result Error: {e}")
     def event_list(self, search=None):
