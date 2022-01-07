@@ -167,7 +167,7 @@ class FetchJson(object):
                     analysis = res.json()
                 profile = {'zid': zid, 'tstamp': tstamp, 'pall': pall['data'], 'victim': victim['data'],
                            'analysis': analysis['data']}
-                self.db.collection.insert_one(profile)
+                self.db.upsert('profiles', profile)
                 return profile
             except Exception as e:
                 logging.error(f"fetch_profile error: {e}")
@@ -247,35 +247,52 @@ class FetchJson(object):
                     profile['avatar_file'] = avatar_file
         return profile
 
-# class Fetch_WTRL(object):
-#     """
-#     For getting data from WTRL
-#     """
-#     def __init__(self, login_data=None, db=ZFileDb()):
-#         if login_data is None:
-#             try:
-#                 config = configparser.ConfigParser()
-#                 config.read('config.ini')
-#                 self.login_data = config['WTRL']['auth']
-#             except Exception as e:
-#                 logging.info('login_data: Need a proper config.ini file or supply login info')
-#                 raise e
-#         else:
-#             self.login_data = login_data
-#         self.db = db
-#         self.session = HTMLSession()
-#     # s = requests_html.session()
-#     try:
-#         r = self.session.get('https://www.wtrl.racing')
-#         assert r.status_code == 200
-#     except:
-#         logging.error(f"https://www.wtrl.racing returned status code: {r.status_code}")
-#
-#     print(r.status_code)
-#     s.headers.update({"Authorization": self.login_data,  # static for ur account
-#                       "Content-Type": "application/x-www-form-urlencoded"})
-#     r = s.post(url="https://www.wtrl.racing/api/wtrlruby.php",
-#                data={
-#                    "wtrlid": "wtrlttt",
-#                    "season": "140",  # session
-#                    "action": "results"})
+class Fetch_WTRL(object):
+    """
+    For getting data from WTRL
+    """
+    def __init__(self, login_data=None, db=ZFileDb()):
+        if login_data is None:
+            try:
+                config = configparser.ConfigParser()
+                config.read('config.ini')
+                self.login_data = config['WTRL']['auth']
+            except Exception as e:
+                logging.warning('login_data: Need a proper config.ini file or supply login info')
+                raise e
+        else:
+            self.login_data = login_data
+        self.db = db
+        self.session = HTMLSession() # s = requests_html.session():
+        try:
+            r = self.session.get('https://www.wtrl.racing')
+            assert r.status_code == 200
+            self.session.headers.update({"Authorization": self.login_data,  # static for ur account
+                              "Content-Type": "application/x-www-form-urlencoded"})
+        except:
+            logging.error(f"https://www.wtrl.racing returned status code: {r.status_code}")
+
+    def fetch_ttt(self, zid, refresh=False):
+        """
+        Fetch Team Time Trial results
+        zid = the ttt number
+        """
+        ttturl="https://www.wtrl.racing/api/wtrlruby.php"
+        is_in_cache = False
+        if not refresh:
+            is_in_cache = self.db.check_cache('wtrl_ttt', zid)
+        if is_in_cache:
+            return is_in_cache, 'cache'
+        else:
+            try:
+                data = {
+                    "wtrlid": "wtrlttt",
+                    "season": zid,  # session
+                    "action": "results"}
+                with self.session.post(ttturl, data=data) as res:
+                    ttt_json = res.json()
+                ttt_result = {'zid': zid, 'ttt_json': ttt_json}
+                self.db.upsert('ttt_result', ttt_result)
+                return ttt_result, 'refresh'
+            except Exception as e:
+                logging.error(f"Failed to fetch and save ttt result: {e}")

@@ -14,7 +14,7 @@ class ZFileDb(object):
         self.db_path = db_path
         self.cached = {'results': f"{self.db_path}/results", 'teams': f"{self.db_path}/teams",
                        'profiles': f"{self.db_path}/profiles", 'teamlist': f"{self.db_path}/teamlist",
-                       'live': f"{self.db_path}/live", 'wtrl_ttt': f"{self.db_path}/wtri_ttt",
+                       'live': f"{self.db_path}/live", 'wtrl_ttt': f"{self.db_path}/wtrl_ttt",
                        'avatar': f"{self.db_path}/avatar"}
         self.folder_setup()
 
