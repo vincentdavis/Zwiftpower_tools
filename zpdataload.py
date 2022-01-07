@@ -1,4 +1,4 @@
-from zpdatareader import FetchJson
+from fetch import FetchJson
 # Define the database
 z = FetchJson()
 z.login()
