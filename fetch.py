@@ -43,7 +43,7 @@ class FetchJson(object):
 
     def fetch_result(self, zid, refresh=False):
         """
-        Fetch the results from and event (zid)
+        Fetch the results from an event (zid)
         Contains:
         - view api
         - zwift api
@@ -69,17 +69,35 @@ class FetchJson(object):
                 return result, 'refresh'
             except Exception as e:
                 logging.error(f"Fetch Result Error: {e}")
-    def event_list(self, search=None):
+
+    def event_list(self, refresh=False):
         """
         Search for upcoming events.
         """
         event_list_url = "https://zwiftpower.com/cache3/lists/0_zwift_event_list_3.json"
 
-    def result_list(self, search=None):
+    def result_list(self, refresh=False):
         """
-        Search recent events
+        Search recent event list
         """
         result_list_url = "https://zwiftpower.com/cache3/lists/0_zwift_event_list_results_3.json?_=1641522900935"
+        tstamp = datetime.datetime.utcnow().isoformat()
+        zid = datetime.datetime.utcnow().strftime('%Y-%m-%d-%Hhr')
+        is_in_cache = False
+        if not refresh:
+            is_in_cache = self.db.check_cache('results_list', zid)
+        if is_in_cache:
+            return is_in_cache, 'cache'
+        else:
+            try:
+                with self.session.get(result_list_url) as res:
+                    results_list = res.json()
+                    results_list: dict[str, Any] = {'zid': zid, 'tstamp': tstamp, 'results_list': results_list['data']}
+                    self.db.upsert('results_list', results_list)
+                return results_list, 'refresh'
+            except Exception as e:
+                logging.info(f"result_list error: {e}")
+                return None, None
 
     def fetch_live_results(self, zid):
         """
