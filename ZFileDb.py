@@ -10,7 +10,7 @@ class ZFileDb(object):
     mostrecent:
     upsert
     """
-    def __init__(self, db_path='database/ZFileDb'):
+    def __init__(self, db_path=None):
         self.db_path = db_path
         self.cached = {'results': f"{self.db_path}/results", 'teams': f"{self.db_path}/teams",
                        'profiles': f"{self.db_path}/profiles", 'teamlist': f"{self.db_path}/teamlist",
@@ -49,3 +49,6 @@ class ZFileDb(object):
         file_path = f"{self.cached[table]}/{zid}.json"
         with open(file_path, 'w') as j:
             json.dump(data, j)
+    def save_avatar(self, file_path, avatar_file):
+        with open(f"{self.cached['avatar']}/{file_path}", 'wb') as local_file:
+            local_file.write(avatar_file.content)

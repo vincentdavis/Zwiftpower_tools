@@ -8,7 +8,7 @@ from requests_html import HTMLSession
 import logging
 from ZFileDb import ZFileDb
 
-logging.basicConfig(filename='fetcher.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='fetcher.log', encoding='utf-8', level=logging.ERROR)
 
 class FetchJson(object):
     def __init__(self, login_data=None, db=ZFileDb()):
@@ -138,7 +138,7 @@ class FetchJson(object):
                 logging.info(f"fetch_ateam error: {e}")
                 return None
 
-    def fetch_teamlist(self, refresh=False, sorted="riders"):
+    def fetch_teamlist(self, refresh=False):
         """
         We use today's date as zid for upsert.
         Gets the list of ZwiftPower teams
@@ -162,9 +162,10 @@ class FetchJson(object):
             except Exception as e:
                 logging.error(f"fetch_teamlist error: {e}")
 
-    def fetch_profile(self, zid, refresh=False):
+    def fetch_profile(self, zid, profile_ext = True, refresh=False):
         """
         User/Rider/Profile
+
         """
         allurl = f"https://zwiftpower.com/cache3/profile/{zid}_all.json"
         victimsurl = f"https://zwiftpower.com/cache3/profile/{zid}_rider_compare_victims.json"
@@ -179,91 +180,118 @@ class FetchJson(object):
             try:
                 with self.session.get(allurl) as res:
                     pall = res.json()
+                    pall = pall['data']
+            except Exception as e:
+                pall = None
+                logging.error(f"fetch_profile error, allurl: {e}")
+            try:
                 with self.session.get(victimsurl) as res:
                     victim = res.json()
+                    victim = victim['data']
+            except Exception as e:
+                victim = None
+                logging.error(f"fetch_profile error, victimsurl: {e}\n**{victimsurl}")
+            try:
                 with self.session.get(analysisurl) as res:
                     analysis = res.json()
-                profile = {'zid': zid, 'tstamp': tstamp, 'pall': pall['data'], 'victim': victim['data'],
-                           'analysis': analysis['data']}
+                    analysis = analysis['data']
+            except Exception as e:
+                analysis = None
+                logging.error(f"fetch_profile error, analysisurl: {e}")
+            if profile_ext:
+                try:
+                    profile_ext_data = self.fetch_profile_ext(zwid = zid)
+                except Exception as e:
+                    profile_ext_data = None
+                    logging.error(f"fetch_profile error, profile_ext_data: {e}")
+            try:
+                profile = {'zid': zid, 'tstamp': tstamp, 'pall': pall, 'victim': victim,
+                           'analysis': analysis, 'profile_ext': profile_ext_data}
                 self.db.upsert('profiles', profile)
                 return profile
             except Exception as e:
-                logging.error(f"fetch_profile error: {e}")
+                logging.error(f"fetch_profile error, upsert: {e}")
 
-    def fetch_profile2(self, zwid, refresh=False, avatar=False):
+    def fetch_profile_ext(self, zwid, refresh=False, avatar=True):
         """
         Avatar should be false or a path "database/avatar/"
         """
         page_url = f"https://zwiftpower.com/profile.php?z={zwid}"
         page_xml = BeautifulSoup(self.session.get(page_url).content, "lxml")
-        profile = {}
-        aurl = page_xml.find("img", {"class": "img-circle"})
-        if aurl:
-            profile['avatar_url'] = page_xml.find("img", {"class": "img-circle"}).get("src")
-        else:
-            profile['avatar_url'] = None
-        profile['long_bio'] = page_xml.find(id='long_bio').text if page_xml.find(
-            id='long_bio') else None
-        profile['zwift_level'] = page_xml.find(
-            title='Zwift in-game level').text if page_xml.find(title='Zwift in-game level') else None
-        table = page_xml.find("table", id="profile_information")
-        if table:
-            table_rows = table.find_all("tr")
-            for tr in table_rows:
-                td = tr.find_all(["td", "th"])
-                row = [i.text.strip() for i in td]
-                # print(row)
-                if "Country" in row and not row[1][0].isdigit():
-                    profile["country"] = row[1] or None
-                if "Race Ranking" in row:
-                    profile["race_rank_pts"] = int("".join(c for c in row[1].split(" ")[0] if c.isdigit()))
-                    profile["race_rank_place"] = int(
-                        "".join(c for c in row[1].split(" pts in ")[1] if c.isdigit()))
-                if "Category" in row:
-                    profile["race_rank_catagory"] = int("".join(c for c in row[1] if c.isdigit()))
-                if "Age Group" in row:
-                    profile["race_rank_age"] = int("".join(c for c in row[1] if c.isdigit()))
-                if "Weight Group" in row:
-                    profile["race_rank_weight"] = int("".join(c for c in row[1] if c.isdigit()))
-                if "Team" in row:
-                    row_test = "".join(c for c in row[1] if c.isdigit())
-                    if row_test.isdigit():
-                        profile["race_rank_team"] = int("".join(c for c in row[1] if c.isdigit()))
-                    else:
-                        profile["race_team"] = row[1] or None
-                if "Minimum Category" in row:
-                    profile["minimum_category"] = row[1][0] or None
-                    profile["minumun_catagory_female"] = row[1][2] if row[1][2] in ['A', 'B', 'C', 'D',
-                                                                                    'E'] else None
-                    profile['races'] = int("".join(c for c in row[1] if c.isdigit()))
-                if "Age" in row:
-                    profile["age"] = row[1] or None
-                if "Average" in row:
-                    profile["average_watts"] = int(row[1].split("watts")[0])
-                    profile["average_wkg"] = float(row[1].split(" /")[1].replace("wkg", ""))
-                if "FTP" in row:
-                    profile["ftp"] = None
-                    profile["kg"] = None
-                    try:
-                        profile["ftp"] = int(row[1].split("w")[0])
-                        profile["kg"] = int("".join(c for c in row[1].split('~ ')[1] if c.isdigit()))
-                    except Exception as e:
-                        logging.error(f"FTP not found: {e}")
-
+        profile_ext = {}
+        try:
+            aurl = page_xml.find("img", {"class": "img-circle"})
+            if aurl:
+                profile_ext['avatar_url'] = page_xml.find("img", {"class": "img-circle"}).get("src")
+            else:
+                profile_ext['avatar_url'] = None
+            profile_ext['long_bio'] = page_xml.find(id='long_bio').text if page_xml.find(
+                id='long_bio') else None
+            profile_ext['zwift_level'] = page_xml.find(
+                title='Zwift in-game level').text if page_xml.find(title='Zwift in-game level') else None
+            table = page_xml.find("table", id="profile_information")
+            if table:
+                table_rows = table.find_all("tr")
+                for tr in table_rows:
+                    td = tr.find_all(["td", "th"])
+                    row = [i.text.strip() for i in td]
+                    # print(row)
+                    if "Country" in row and not row[1][0].isdigit():
+                        profile_ext["country"] = row[1] or None
+                    if "Race Ranking" in row:
+                        profile_ext["race_rank_pts"] = int("".join(c for c in row[1].split(" ")[0] if c.isdigit()))
+                        profile_ext["race_rank_place"] = int(
+                            "".join(c for c in row[1].split(" pts in ")[1] if c.isdigit()))
+                    if "Category" in row:
+                        profile_ext["race_rank_catagory"] = int("".join(c for c in row[1] if c.isdigit()))
+                    if "Age Group" in row:
+                        profile_ext["race_rank_age"] = int("".join(c for c in row[1] if c.isdigit()))
+                    if "Weight Group" in row:
+                        profile_ext["race_rank_weight"] = int("".join(c for c in row[1] if c.isdigit()))
+                    if "Team" in row:
+                        row_test = "".join(c for c in row[1] if c.isdigit())
+                        if row_test.isdigit():
+                            profile_ext["race_rank_team"] = int("".join(c for c in row[1] if c.isdigit()))
+                        else:
+                            profile_ext["race_team"] = row[1] or None
+                    if "Minimum Category" in row:
+                        profile_ext["minimum_category"] = row[1][0] or None
+                        profile_ext["minumun_catagory_female"] = row[1][2] if row[1][2] in ['A', 'B', 'C', 'D',
+                                                                                        'E'] else None
+                        profile_ext['races'] = int("".join(c for c in row[1] if c.isdigit()))
+                    if "Age" in row:
+                        profile_ext["age"] = row[1] or None
+                    if "Average" in row:
+                        profile_ext["average_watts"] = int(row[1].split("watts")[0])
+                        profile_ext["average_wkg"] = float(row[1].split(" /")[1].replace("wkg", ""))
+                    if "FTP" in row:
+                        profile_ext["ftp"] = None
+                        profile_ext["kg"] = None
+                        try:
+                            profile_ext["ftp"] = int(row[1].split("w")[0])
+                            profile_ext["kg"] = int("".join(c for c in row[1].split('~ ')[1] if c.isdigit()))
+                        except Exception as e:
+                            logging.error(f"FTP not found: {e}")
+        except Exception as e:
+            logging.error(f"fetch_profile_ext error: {e}")
+        try:
             if avatar:
                 # database/avatar/
                 try:
                     tstamp = datetime.datetime.utcnow().isoformat()
-                    file_path = f"{avatar}{zwid}_{tstamp}.jpeg"
-                    avatar_file = self.session.get(profile['avatar_url'])
-                    with open(file_path, 'wb') as local_file:
-                        local_file.write(avatar_file.content)
+                    file_name = f"avatar_{zwid}_{tstamp}.jpeg"
+                    avatar_file = self.session.get(profile_ext['avatar_url'])
+                    self.db.save_avatar(file_name, avatar_file)
                 except Exception as e:
                     logging.error(f"Avatar file save error: {e}")
                     avatar_file = None
                 finally:
-                    profile['avatar_file'] = avatar_file
-        return profile
+                    profile_ext['avatar_file'] = file_name
+        except Exception as e:
+            profile_ext['avatar_file'] = None
+            logging.error(f"fetch_profile_ext AVattar error: {e}")
+        finally:
+            return profile_ext
 
 class Fetch_WTRL(object):
     """
