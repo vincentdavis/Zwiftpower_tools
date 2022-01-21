@@ -33,7 +33,7 @@ def combine_on_zwid(df_base, df_add):
     """
     pass
 
-def calculate_sprints(df, sprint_names=None):
+def expand_sprints_fts(df, sprint_names=None):
     """
     - splits msec, watts, wkg columns
     - sprint_names dict(num:name)
