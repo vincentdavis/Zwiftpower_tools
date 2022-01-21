@@ -293,6 +293,29 @@ class FetchJson(object):
         finally:
             return profile_ext
 
+    def fetch_sprints(self, zid, refresh=False):
+        """
+        Fastest through segment: FTS
+        """
+        ftsurl = f"https://zwiftpower.com/api3.php?do=event_sprints&zid={zid}"
+        tstamp = datetime.datetime.utcnow().isoformat()
+        is_in_cache = False
+        if not refresh:
+            is_in_cache = self.db.check_cache('event_fts', zid)
+        if is_in_cache:
+            return is_in_cache, 'cache'
+        else:
+            try:
+                with self.session.get(ftsurl) as res:
+                    ftsdata = res.json()
+                fts = {'zid': zid, 'tstamp': tstamp, 'fts': ftsdata['data']}
+                self.db.upsert('event_fts', fts)
+                return fts, 'refresh'
+            except Exception as e:
+                logging.info(f"fetch_sprints FTS error: {e}")
+                print(e)
+                return None, 'refresh'
+
 class Fetch_WTRL(object):
     """
     For getting data from WTRL
@@ -342,3 +365,5 @@ class Fetch_WTRL(object):
                 return ttt_result, 'refresh'
             except Exception as e:
                 logging.error(f"Failed to fetch and save ttt result: {e}")
+
+

@@ -16,7 +16,7 @@ class ZFileDb(object):
                        'profiles': f"{self.db_path}/profiles", 'teamlist': f"{self.db_path}/teamlist",
                        'live': f"{self.db_path}/live", 'wtrl_ttt': f"{self.db_path}/wtrl_ttt",
                        'avatar': f"{self.db_path}/avatar", 'results_list': f"{self.db_path}/results_list",
-                       'event_list': f"{self.db_path}/event_list"}
+                       'event_list': f"{self.db_path}/event_list", 'event_fts': f"{self.db_path}/event_fts"}
         self.folder_setup()
 
     def folder_setup(self):
