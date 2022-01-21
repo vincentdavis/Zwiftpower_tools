@@ -1,4 +1,5 @@
 import pandas as pd
+from ast import literal_eval
 
 def splitlist(df, col, drop2=True):
     df[[f'{col}', f'{col}_2']] = df[col].tolist()
@@ -40,12 +41,20 @@ def expand_sprints_fts(df, sprint_names=None):
 
     """
     for col in ['msec', 'watts', 'wkg']:
-        temp = pd.json_normalize(df[col])
+        try:
+            temp = pd.json_normalize(df[col])
+        except AttributeError:
+          print(col)
+          df[col] = df[col].apply(literal_eval)
+          temp = pd.json_normalize(df[col])
+
         if sprint_names:
             temp.rename(columns={k:f"{col}_{sprint_names[k]}" for k in temp.columns}, inplace=True)
         else:
             temp.rename(columns={k: f"{col}_{k}" for k in temp.columns}, inplace=True)
         df = pd.concat([df, temp], axis=1)
+    return df
+
 
 def rank_fts(df, sprints, group_col='category'):
   """
