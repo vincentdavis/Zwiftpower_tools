@@ -19,7 +19,7 @@ def team_time(df, team, time='gun_time', top=4):
     team can be a list of rider zwid or a tname tag.
     """
     if isinstance(team, 'str'):
-        team_result = {'team_times': df[df.tname == team].nsmallest(4, time) [['zwid', time]].to_dict(orient='records')]
+        team_result = {'team_times': df[df.tname == team].nsmallest(4, time) [['zwid', time]].to_dict(orient='records')}
         team_result['team_total_time'] = df[df.tname == team].nsmallest(4, 'time')[time].sum(axis=0)
     elif isinstance(team, 'list'):
         team_result = {'team_times': df[df.zwid.isin(team)].nsmallest(4, time)[['zwid', time]].to_dict(orient='records')}
