@@ -56,26 +56,20 @@ def expand_sprints_fts(df, sprint_names=None):
 
 
 def rank_fts(df, sprints='All', group_col='category'):
-  """
-  You can choose different group_col and sort_col
-  if grou_col is none, then do not group
-  """
-  if sprints is 'All':
-      sprints = [col for col in df.columns if 'msec_' in col]
-      for sp in sprints:
-          if group_col is not None:
-              ranks = df.groupby(group_col)[sp].rank(ascending = True, method = 'first')
-              ranks.name = f"fts_{group_col}_{sp}_rank"
-          else:
-            ranks = df.rank(ascending = True, method = 'first')
-  else:
-      for sp in sprints:
-          if group_col is not None:
-              ranks = df.groupby(group_col)[sp].rank(ascending = True, method = 'first')
-              ranks.name = f"fts_{group_col}_{sp}_rank"
-          else:
-            ranks = df.rank(ascending = True, method = 'first')
-  return pd.concat([df, ranks], axis=1)
+    """
+    You can choose different group_col and sort_col
+    if grou_col is none, then do not group
+    """
+    if sprints is 'All':
+        sprints = [col for col in df.columns if 'msec_' in col]
+        for sp in sprints:
+            if group_col is not None:
+                ranks = df.groupby(group_col)[sp].rank(ascending = True, method = 'first')
+                ranks.name = f"fts_{group_col}_{sp}_rank"
+            else:
+                ranks = df.rank(ascending = True, method = 'first')
+            df = pd.concat([df, ranks], axis=1)
+    return df
 
 def melt_to_rows(df):
     """
