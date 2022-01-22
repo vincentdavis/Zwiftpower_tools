@@ -44,7 +44,6 @@ def expand_sprints_fts(df, sprint_names=None):
         try:
             temp = pd.json_normalize(df[col])
         except AttributeError:
-          print(col)
           df[col] = df[col].apply(literal_eval)
           temp = pd.json_normalize(df[col])
 
@@ -56,17 +55,26 @@ def expand_sprints_fts(df, sprint_names=None):
     return df
 
 
-def rank_fts(df, sprints, group_col='category'):
+def rank_fts(df, sprints='All', group_col='category'):
   """
   You can choose different group_col and sort_col
   if grou_col is none, then do not group
   """
-  for sp in sprints:
-      if group_col is not None:
-          ranks = df.groupby(group_col)[sp].rank(ascending = True, method = 'first')
-          ranks.name = f"fts_{group_col}_{sp}_rank"
-      else:
-        ranks = df.rank(ascending = True, method = 'first')
+  if sprints is 'All':
+      sprints = [col for col in df.columns if 'msec_' in col]
+      for sp in sprints:
+          if group_col is not None:
+              ranks = df.groupby(group_col)[sp].rank(ascending = True, method = 'first')
+              ranks.name = f"fts_{group_col}_{sp}_rank"
+          else:
+            ranks = df.rank(ascending = True, method = 'first')
+  else:
+      for sp in sprints:
+          if group_col is not None:
+              ranks = df.groupby(group_col)[sp].rank(ascending = True, method = 'first')
+              ranks.name = f"fts_{group_col}_{sp}_rank"
+          else:
+            ranks = df.rank(ascending = True, method = 'first')
   return pd.concat([df, ranks], axis=1)
 
 def melt_to_rows(df):
