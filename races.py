@@ -82,7 +82,7 @@ def melt_to_rows(df):
     melt_col = [col for col in df.columns if 'msec_' in col]
     s_long = pd.melt(df, id_vars=dont_melt_col,
                      value_vars=melt_col,
-                     var_name='Sprint', value_name='sprint_msec').sort_values('fts_category_13_msec_rank')
+                     var_name='Sprint', value_name='sprint_msec')
     return s_long
 
 
